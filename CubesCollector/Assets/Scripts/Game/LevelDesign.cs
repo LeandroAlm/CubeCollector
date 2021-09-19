@@ -14,7 +14,7 @@ namespace Game.Design.Level
     [CreateAssetMenu(fileName = "LevelDesign", menuName = "ScriptableObjects/LevelDesign")]
     public class LevelDesign : ScriptableObject
     {
-        public enum JuntionType
+        public enum JunctionType
         {
             Straight,
             Left,
@@ -30,6 +30,11 @@ namespace Game.Design.Level
             Right,
         }
 
-        private List<Junction> juntions;
+        public List<Junction> junctions;
+
+        public void Init(List<Junction> a_junctions)
+        {
+            junctions = a_junctions;
+        }
     }
 }

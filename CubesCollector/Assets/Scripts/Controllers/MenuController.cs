@@ -7,6 +7,7 @@
 using Game.Controller.Settings;
 using Game.Design.Level;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,11 +33,12 @@ namespace Game.Controller.Menu
         #region internal variables
         private int totalCoins = 0;
         private int maxLevel = 1;
+        public static int currentLevel = 0;
         private SettingsController settingsController;
         private List<LevelDesign> allLevels;
         #endregion internal variables
 
-        #region methods
+        #region base methods
         private void Awake()
         {
             if (PlayerPrefs.GetInt("COINS") > 0)
@@ -54,7 +56,7 @@ namespace Game.Controller.Menu
 
             LevelsLoad();
         }
-        #endregion methods
+        #endregion base methods
 
         #region custom methods
         /// <summary>
@@ -115,27 +117,24 @@ namespace Game.Controller.Menu
         /// </summary>
         private void LevelsLoad()
         {
-            int count = 1;
             int x = 1;
             int y = 1;
             int current_Y = -100;
 
-            allLevels = new List<LevelDesign>();
-            for (int i = 0; i < 5; i++)
-            {
-                allLevels.Add(new LevelDesign());
-            }
-
-            foreach (var level in allLevels)
+            DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Levels");
+            for (int i = 1; i < dir.GetFiles("*.asset").Length+1; i++)
             {
                 GameObject levelBtt = Instantiate(Resources.Load<GameObject>("Prefabs/UI/LevelBtt"), levelContainerGO.transform) as GameObject;
-                levelBtt.GetComponent<RectTransform>().anchoredPosition = new Vector2(125 + 210*(x-1), current_Y);
-                levelBtt.name = "Btt_" + (count < 10 ? "0" : "") + count;
-                levelBtt.transform.GetComponentInChildren<TextMeshProUGUI>().text = (count < 10 ? "0" : "") + count;
+                levelBtt.GetComponent<RectTransform>().anchoredPosition = new Vector2(125 + 210 * (x - 1), current_Y);
+                levelBtt.name = "Btt_" + (i < 10 ? "0" : "") + i;
+                levelBtt.transform.GetComponentInChildren<TextMeshProUGUI>().text = (i < 10 ? "0" : "") + i;
+
+                // Need to create an int to fix i value, solved in stackOverflow
+                int i_value = i;
+                levelBtt.GetComponent<Button>().onClick.AddListener(delegate { OnClickLoadLevel(i_value); });
 
                 x++;
                 y++;
-                count++;
                 if (y >= 5)
                 {
                     x = 1;
@@ -143,6 +142,12 @@ namespace Game.Controller.Menu
                     current_Y -= 210;
                 }
             }
+        }
+        
+        private void OnClickLoadLevel(int a_level)
+        {
+            MenuController.currentLevel = a_level;
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
         #endregion levels
         #endregion custom methods
