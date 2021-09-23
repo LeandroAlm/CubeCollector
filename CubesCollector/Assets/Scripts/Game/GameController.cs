@@ -20,23 +20,17 @@ namespace Game.Controller.Game
     {
         #region vars
         [SerializeField]
-        [Tooltip("Player gameobject reference")]
+        [Tooltip("Player object reference")]
         public GameObject player;
         [SerializeField]
-        [Tooltip("Settings button reference")]
+        [Tooltip("Settings button object reference")]
         private GameObject settingsBtt;
         [SerializeField]
-        [Tooltip("Settings Panel reference")]
-        public GameObject settingsPanel;
-        [SerializeField]
-        [Tooltip("Win Panel reference")]
+        [Tooltip("Win Panel object reference")]
         private GameObject winPanel;
         [SerializeField]
-        [Tooltip("Lose Panel reference")]
+        [Tooltip("Lose Panel object reference")]
         private GameObject losePanel;
-        [SerializeField]
-        [Tooltip("Play button reference")]
-        private GameObject playBtt;
         #endregion vars
 
         #region internal vars
@@ -53,19 +47,10 @@ namespace Game.Controller.Game
                 Destroy(map.GetChild(i).gameObject);
             }
 
-            // UI start layout
-            playBtt.SetActive(true);
-            losePanel.SetActive(false);
-            winPanel.SetActive(false);
-            settingsBtt.SetActive(false);
-            settingsPanel.SetActive(false);
-
-            //Menu.MenuController.settingsController.currentLevel = 2; // Force Level in Game Scene
             Material playersMat = Resources.Load<Material>("Materials/Mat_Box_" + Menu.MenuController.settingsController.currentBoxID);
             LevelLoader levelLoader = gameObject.AddComponent<LevelLoader>();
-            levelLoader.loadLevel(Menu.MenuController.settingsController.currentLevel, playersMat);
+            levelLoader.LoadLevel(Menu.MenuController.settingsController.currentLevel, playersMat);
             Destroy(levelLoader);
-
 
             if (Menu.MenuController.settingsController.musicTrigger == (int)Settings.SettingsController.settingsTrigger.On)
             {
@@ -76,10 +61,8 @@ namespace Game.Controller.Game
                 audio.Play();
             }
 
+            settingsBtt.SetActive(false);
             player.GetComponent<PlayerController>().PlayerInit(playersMat);
-            // Skybox change color
-            //skyboxMaterial.SetColor("_TintColor", Color.red);
-            //RenderSettings.skybox = skyboxMaterial;
         }
 
         /// <summary>
@@ -98,6 +81,11 @@ namespace Game.Controller.Game
             {
                 winPanel.transform.Find("Next").gameObject.SetActive(false);
                 winPanel.transform.Find("Warning").gameObject.SetActive(true);
+            }
+            else
+            {
+                winPanel.transform.Find("Next").gameObject.SetActive(true);
+                winPanel.transform.Find("Warning").gameObject.SetActive(false);
             }
 
             settingsBtt.SetActive(false);

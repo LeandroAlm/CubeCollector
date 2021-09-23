@@ -21,41 +21,66 @@ namespace Game.Controller.UI
     {
         #region variables
         [SerializeField]
-        [Tooltip("Reference of Menu UI object")]
+        [Tooltip("Menu UI object reference")]
         private GameObject menuUIObject;
         [SerializeField]
-        [Tooltip("Reference of Game UI object")]
+        [Tooltip("Game UI object reference")]
         public GameObject gameUIObject;
         [SerializeField]
-        [Tooltip("Reference of shop coins object")]
+        [Tooltip("Settings panel reference")]
+        private GameObject settingsPanel;
+        [SerializeField]
+        [Tooltip("Lose panel reference")]
+        private GameObject losePanel;
+        [SerializeField]
+        [Tooltip("Win panel reference")]
+        private GameObject winPanel;
+        [SerializeField]
+        [Tooltip("Settings panel in Game reference")]
+        private GameObject gameSettingsPanel;
+        [SerializeField]
+        [Tooltip("Shop coins object reference")]
         private GameObject shopCoinGO;
         [SerializeField]
-        [Tooltip("Reference of shop glow object")]
-        private GameObject shopGlowGO;
+        [Tooltip("Shop buttons container object reference")]
+        private GameObject shopContainer;
         [SerializeField]
-        [Tooltip("Reference of Menu object")]
+        [Tooltip("3D camera reference")]
         private Camera gameCamera;
         [SerializeField]
-        [Tooltip("Reference of Menu object")]
+        [Tooltip("UI Camera reference")]
         public Camera uiCamera;
         [SerializeField]
-        [Tooltip("Reference of sound button gameobject")]
+        [Tooltip("Play button reference")]
+        private GameObject gamePlayBtt;
+        [SerializeField]
+        [Tooltip("Sound button object, in settings, reference")]
         private GameObject soundGO;
         [SerializeField]
-        [Tooltip("Reference of music button gameobject")]
+        [Tooltip("Music button object, in settings, reference")]
         private GameObject musicGO;
         [SerializeField]
-        [Tooltip("Reference of vibration button gameobject")]
+        [Tooltip("Vibration button object, in settings, reference")]
         private GameObject vibraGO;
         [SerializeField]
-        [Tooltip("Reference of player gameobject")]
+        [Tooltip("Player object, reference")]
         private GameObject player;
         #endregion variables
 
         #region base methods
         private void Awake()
         {
+            SettingPanelInit();
             StartBackgroundMusic();
+
+            for (int i = 0; i < menuUIObject.transform.childCount; i++)
+            {
+                if (i <= 1)
+                    menuUIObject.transform.GetChild(i).gameObject.SetActive(true);
+                else
+                    menuUIObject.transform.GetChild(i).gameObject.SetActive(false);
+            }
+            gameUIObject.SetActive(false);
         }
         #endregion base methods
 
@@ -117,7 +142,7 @@ namespace Game.Controller.UI
             }
         }
         #endregion SETTINGS
-        
+
         #region LEVEL
         /// <summary>
         /// Load level by ID
@@ -131,6 +156,7 @@ namespace Game.Controller.UI
             gameCamera.gameObject.SetActive(true);
             uiCamera.clearFlags = CameraClearFlags.Depth;
 
+            GameUILayoutInit();
             GetComponent<GameController>().InitLevel();
         }
         #endregion LEVEL
@@ -148,6 +174,8 @@ namespace Game.Controller.UI
             {
                 current_shop += a_BttReference.name + ";";
                 MenuController.settingsController.currentShop = current_shop;
+
+                shopContainer.transform.Find(MenuController.settingsController.currentBoxID.ToString()).GetChild(0).gameObject.SetActive(false);
                 MenuController.settingsController.currentBoxID = int.Parse(a_BttReference.name);
 
                 UpdateUICoinsAmout();
@@ -158,12 +186,12 @@ namespace Game.Controller.UI
                     cointText.GetComponent<TextMeshProUGUI>().text = MenuController.settingsController.Coins.ToString();
                 }
 
-                a_BttReference.GetComponent<Image>().color = Color.white;
-                a_BttReference.GetComponent<Button>().onClick.RemoveAllListeners();
-                a_BttReference.GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemChangeClick(a_BttReference); });
-                a_BttReference.transform.GetChild(0).gameObject.SetActive(false);
+                a_BttReference.transform.GetChild(1).GetComponent<Image>().color = Color.white;
+                a_BttReference.transform.GetChild(1).GetComponent<Button>().onClick.RemoveAllListeners();
+                a_BttReference.transform.GetChild(1).GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemChangeClick(a_BttReference); });
+                a_BttReference.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
 
-                shopGlowGO.GetComponent<RectTransform>().anchoredPosition = a_BttReference.GetComponent<RectTransform>().anchoredPosition;
+                a_BttReference.transform.GetChild(0).gameObject.SetActive(true);
             }
             else
             {
@@ -185,8 +213,9 @@ namespace Game.Controller.UI
 
                 if (allMaterials.ToList().Contains(a_BttReference.name))
                 {
+                    shopContainer.transform.Find(MenuController.settingsController.currentBoxID.ToString()).GetChild(0).gameObject.SetActive(false);
                     MenuController.settingsController.currentBoxID = int.Parse(a_BttReference.name);
-                    GetComponent<MenuController>().shopContainerGO.transform.Find("Glow").GetComponent<RectTransform>().anchoredPosition = a_BttReference.GetComponent<RectTransform>().anchoredPosition;
+                    a_BttReference.transform.GetChild(0).gameObject.SetActive(true);
                 }
             }
         }
@@ -198,6 +227,7 @@ namespace Game.Controller.UI
         /// </summary>
         public void OnRestartClick()
         {
+            GameUILayoutInit();
             GetComponent<GameController>().InitLevel();
         }
 
@@ -206,6 +236,7 @@ namespace Game.Controller.UI
         /// </summary>
         public void OnStartClick()
         {
+            Time.timeScale = 1.0f;
             player.GetComponent<PlayerController>().PlayerStart();
         }
 
@@ -214,15 +245,17 @@ namespace Game.Controller.UI
         /// </summary>
         public void OnSettingsClick()
         {
-            if (!GetComponent<GameController>().settingsPanel.activeSelf)
+            if (!gameSettingsPanel.activeSelf)
             {
-                GetComponent<GameController>().settingsPanel.SetActive(true);
+                gameSettingsPanel.SetActive(true);
                 player.GetComponent<PlayerController>().PlayerPause();
+                Time.timeScale = 0.0f;
             }
             else
             {
-                GetComponent<GameController>().settingsPanel.SetActive(false);
+                gameSettingsPanel.SetActive(false);
                 player.GetComponent<PlayerController>().PlayerStart();
+                Time.timeScale = 1.0f;
             }
         }
 
@@ -232,6 +265,7 @@ namespace Game.Controller.UI
         public void OnNextClick()
         {
             Menu.MenuController.settingsController.currentLevel++;
+            GameUILayoutInit();
             GetComponent<GameController>().InitLevel();
         }
 
@@ -243,7 +277,7 @@ namespace Game.Controller.UI
             // Back to Menu
             GetComponent<MenuController>().LevelsInit();
             GetComponent<MenuController>().menuUIObject.SetActive(true);
-            GetComponent<UIController>().gameUIObject.SetActive(false);
+            gameUIObject.SetActive(false);
             GetComponent<MenuController>().gameCamera.gameObject.SetActive(false);
             GetComponent<UIController>().uiCamera.clearFlags = CameraClearFlags.Skybox;
 
@@ -296,7 +330,40 @@ namespace Game.Controller.UI
             }
         }
 
-        private IEnumerator ShopCoinsError()
+        /// <summary>
+        /// Update settings painel buttons with saves
+        /// </summary>
+        private void SettingPanelInit()
+        {
+            Sprite soundOn = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
+            Sprite soundOff = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
+
+            if (MenuController.settingsController.soundTrigger == (int)SettingsController.settingsTrigger.On)
+                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOn;
+            else
+                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOff;
+
+            if (MenuController.settingsController.musicTrigger == (int)SettingsController.settingsTrigger.On)
+                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOn;
+            else
+                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOff;
+
+            if (MenuController.settingsController.vibrationTrigger == (int)SettingsController.settingsTrigger.On)
+                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOn", typeof(Sprite)) as Sprite;
+            else
+                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOff", typeof(Sprite)) as Sprite;
+        }
+
+        public void GameUILayoutInit()
+        {
+            // UI start layout
+            gamePlayBtt.SetActive(true);
+            losePanel.SetActive(false);
+            winPanel.SetActive(false);
+            gameSettingsPanel.SetActive(false);
+        }
+
+    private IEnumerator ShopCoinsError()
         {
             Color color = Color.red;
             while (color.g < 1.0f && color.b < 1.0f)

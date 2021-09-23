@@ -19,33 +19,42 @@ namespace Game.Controller.Player
     {
         #region vars
         [SerializeField]
-        [Tooltip("Gamecontroller gameobject reference")]
+        [Tooltip("Gamecontroller object reference")]
         private GameObject gameControllerGO;
         [SerializeField]
-        [Tooltip("Coin amout gameobject reference")]
+        [Tooltip("Game coin amout object reference")]
         private GameObject coinsTextGO;
         [SerializeField]
-        [Tooltip("Extra coins gameobject reference")]
+        [Tooltip("Extra coins object reference")]
         private GameObject extraGO;
         [SerializeField]
-        [Tooltip("Speed multiplier")]
+        [Tooltip("Map object reference")]
+        private GameObject mapGO;
+        [SerializeField]
+        [Tooltip("Forward speed")]
         private float speed = 1.0f;
         [SerializeField]
-        [Tooltip("Speed multiplier for side move")]
+        [Tooltip("Side speed")]
         private float speed_side = 1.0f;
         [SerializeField]
-        [Tooltip("Accelation multiplier for side move")]
-        private float accelation_multiplier;
+        [Tooltip("Acceleration multiplier for side move, when drag direction change Acceleration goes 0.0f - 1.0f with this multiplier. Created to smooth direction change")]
+        private float accelerationMultiplier;
+        [Range(0.0f, 1.0f)]
+        [SerializeField]
+        [Tooltip("Collider offeet, when box collide with red box they should have same Y to block, this offset is used to create a gap")]
+        private float colliderOffset;
+        [SerializeField]
+        [Tooltip("Extra coins earn for each extra box")]
+        private int extraCoin;
         [SerializeField]
         [Tooltip("Player initial possition")]
         private Vector3 initialPosition;
-        [Range(0.0f, 1.0f)]
         [SerializeField]
-        [Tooltip("Collider offeet, when box collide with red box they should have same Y to block, this offset is used to that")]
-        private float colliderOffset;
+        [Tooltip("Box 0 initial possition")]
+        private Vector3 boxInitialPosition;
         [SerializeField]
-        [Tooltip("Extra coins for each extra box")]
-        private int extraCoin;
+        [Tooltip("Guy initial possition")]
+        private Vector3 guyInitialPosition;
         #endregion vars
 
         #region internal vars
@@ -80,7 +89,7 @@ namespace Game.Controller.Player
         /// <summary>
         /// Uses to update and limit max side position (keeping player inside of platform)
         /// </summary>
-        [SerializeField]private float currentLimitControl;
+        private float currentLimitControl;
         /// <summary>
         /// flag if is falling, use to move down quicker
         /// </summary>
@@ -120,7 +129,7 @@ namespace Game.Controller.Player
         {
             if (currentStatus == playerStatus.Play)
             {
-                // Go foward
+                // Go forward
                 transform.position += transform.forward * speed * Time.deltaTime;
 
                 // Go sides
@@ -142,7 +151,7 @@ namespace Game.Controller.Player
                         }
 
                         if (acceleration < 1)
-                            acceleration += Time.deltaTime * accelation_multiplier;
+                            acceleration += Time.deltaTime * accelerationMultiplier;
                         else
                             acceleration = 1.0f;
 
@@ -193,7 +202,7 @@ namespace Game.Controller.Player
                     transform.right = (currentCurveRight.position - transform.position);
                     transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
                 }
-                else if (transform.rotation.eulerAngles.y != currentJuntion.transform.rotation.eulerAngles.y)// force current junction foward
+                else if (transform.rotation.eulerAngles.y != currentJuntion.transform.rotation.eulerAngles.y)// force current junction forward
                     transform.forward = direction;
             }
         }
@@ -212,7 +221,7 @@ namespace Game.Controller.Player
                             && collision.transform.position.y <= child.position.y + colliderOffset)
                         {
                             child.tag = "Untagged";
-                            child.parent = GameObject.Find("Map").transform;
+                            child.parent = mapGO.transform;
                             collision.gameObject.tag = "Untagged";
                             boxRemmoved = true;
                             break;
@@ -239,9 +248,9 @@ namespace Game.Controller.Player
                         // Fix remaining boxes positions
                         for (int i = 0; i < boxesContainer.childCount; i++)
                         {
-                            boxesContainer.GetChild(i).localPosition = new Vector3(0, 0.6f, 0) + (Vector3.up * i);
+                            boxesContainer.GetChild(i).localPosition = boxInitialPosition + (Vector3.up * i);
                         }
-                        guyTransform.localPosition = new Vector3(0, 1.1f, 0) + (Vector3.up * (boxesContainer.childCount-1));
+                        guyTransform.localPosition = guyInitialPosition + (Vector3.up * (boxesContainer.childCount-1));
                         transform.position += Vector3.up;
                     }
 
@@ -254,15 +263,15 @@ namespace Game.Controller.Player
             else if (collision.gameObject.CompareTag("BoxCollect"))
             {
                 collision.transform.SetParent(boxesContainer);
-                collision.transform.localPosition = (new Vector3(0, 0.6f, 0)) + Vector3.up * (boxesContainer.childCount-1);
-                guyTransform.localPosition = (new Vector3(0, 1.1f, 0)) + Vector3.up * (boxesContainer.childCount-1);
+                collision.transform.localPosition = boxInitialPosition + Vector3.up * (boxesContainer.childCount-1);
+                guyTransform.localPosition = guyInitialPosition + Vector3.up * (boxesContainer.childCount-1);
                 collision.gameObject.tag = "Untagged";
                 PlayAudioByName("boxWin", 1f);
             }
             else if (collision.gameObject.CompareTag("Coin"))
             {
                 coinsCollect++;
-                coinsTextGO.GetComponent<TextMeshProUGUI>().text = coinsCollect.ToString();
+                coinsTextGO.GetComponent<TextMeshProUGUI>().text = (MenuController.settingsController.Coins + coinsCollect).ToString();
                 Destroy(collision.gameObject);
 
                 PlayAudioByName("coin", 0.75f);
@@ -319,14 +328,14 @@ namespace Game.Controller.Player
             else
                 boxesContainer.GetChild(0).GetComponent<Renderer>().material = a_material;
 
-            boxesContainer.GetChild(0).localPosition = new Vector3(0, 0.6f, 0);
+            boxesContainer.GetChild(0).localPosition = boxInitialPosition;
             guyTransform.rotation = Quaternion.Euler(0, 50, 0);
-            guyTransform.localPosition = new Vector3(0.0f, 1.1f, 0.0f);
+            guyTransform.localPosition = guyInitialPosition;
             guyTransform.GetComponent<Animator>().SetBool("isFalling", false);
             guyTransform.GetComponent<Animator>().SetBool("isDancing", false);
 
             coinsTextGO.GetComponent<TextMeshProUGUI>().text = MenuController.settingsController.Coins.ToString();
-            currentJuntion = GameObject.Find("Start0");
+            currentJuntion = mapGO.transform.GetChild(0).gameObject;
 
             if (!GetComponent<Rigidbody>())
             {
@@ -440,7 +449,7 @@ namespace Game.Controller.Player
 
             guyTransform.GetComponent<Animator>().SetBool("isDancing", true);
             guyTransform.Rotate(Vector3.up * -50);
-            //guyTransform.rotation = Quaternion.Euler(0, 0, 0);
+            MenuController.settingsController.Coins += coinsCollect;
 
             yield return new WaitForSeconds(0.5f);
 
@@ -451,9 +460,10 @@ namespace Game.Controller.Player
                 {
                     guyTransform.transform.localPosition += Vector3.down;
                     Destroy(boxesContainer.GetChild(initialBoxes - i).gameObject);
-                    coinsCollect += extraCoin;
+
+                    MenuController.settingsController.Coins += extraCoin;
                     PlayAudioByName("coin", 0.5f);
-                    coinsTextGO.GetComponent<TextMeshProUGUI>().text = coinsCollect.ToString();
+                    coinsTextGO.GetComponent<TextMeshProUGUI>().text = MenuController.settingsController.Coins.ToString();
 
                     float angle = 0;
                     while (angle < 180)
@@ -461,14 +471,13 @@ namespace Game.Controller.Player
                         float extraSize = (Mathf.Sin(angle * Mathf.Deg2Rad) * 30);
                         extraGO.GetComponent<TextMeshProUGUI>().fontSize = 70 + extraSize;
 
-                        angle++;
+                        angle += speed/2;
 
                         yield return new WaitForEndOfFrame();
                     }
                 }
             }
 
-            MenuController.settingsController.Coins += coinsCollect;
             yield return new WaitForSeconds(0.25f);
 
             extraGO.SetActive(false);

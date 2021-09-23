@@ -19,7 +19,14 @@ using Game.Loader.Level;
 
 public class LevelMaker : EditorWindow
 {
+    #region variables
+    /// <summary>
+    /// Current level being design
+    /// </summary>
     private LevelDesign currentLevel;
+    /// <summary>
+    /// Current Junction made in Editor window
+    /// </summary>
     private List<Junction> currentJunctions;
     private int nameID;
     private string answerMessage;
@@ -37,14 +44,15 @@ public class LevelMaker : EditorWindow
     SerializedProperty coins;
     SerializedProperty boxes;
     SerializedProperty boxesLose;
-
     enum answerMessageType
     {
         Empety,
         Ok,
         Error,
     }
+    #endregion variables
 
+    #region base methods
     [MenuItem("EditorLevel/Maker")]
     static void Init()
     {
@@ -91,41 +99,25 @@ public class LevelMaker : EditorWindow
         if (currentJuntionTypeID == 0)
         {
             GUILayout.BeginHorizontal();
-            // "target" can be any class derrived from ScriptableObject 
-            // (could be EditorWindow, MonoBehaviour, etc)
-            //ScriptableObject target = this;
-            //SerializedObject so = new SerializedObject(target);
 
             if (currentCoinsPosition == null)
             {
-                currentCoinsPosition = new bool[15];
-                currentBlockWinPosition = new int[15];
-                currentBlockLosePosition = new int[5];
+                ResetArrays();
             }
-            //SerializedProperty p1 = so.FindProperty("currentCoinsPosition");
-            //EditorGUILayout.PropertyField(p1);
-            //so.ApplyModifiedProperties();
+
             EditorGUILayout.PropertyField(coins, new GUIContent("Coins positions"));
             EditorGUILayout.PropertyField(boxes, new GUIContent("Boxes positions"));
             GUILayout.EndHorizontal();
             EditorGUILayout.PropertyField(boxesLose, new GUIContent("Boxes Lose positions"));
-
-            //if (currentBlockWinPosition == null)
-            //    currentBlockWinPosition = new int[15];
-            //SerializedProperty p2 = so.FindProperty("currentBlockWinPosition");
-            //EditorGUILayout.PropertyField(p2, true);
-            //so.ApplyModifiedProperties();
-
-            //if (currentBlockLosePosition == null)
-            //    currentBlockLosePosition = new int[5];
-            //SerializedProperty p3 = so.FindProperty("currentBlockLosePosition");
-            //EditorGUILayout.PropertyField(p3, true);
             so.ApplyModifiedProperties();
         }
 
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Add Junction"))
             AddJunction();
+
+        if (GUILayout.Button("Add Blank Junction"))
+            AddJunctionBlank();
 
         if (GUILayout.Button("Undo Junction"))
             UndoJunction();
@@ -147,10 +139,12 @@ public class LevelMaker : EditorWindow
             GUILayout.Label(answerMessage);
         }
     }
+    #endregion base methods
 
+    #region custom methods
     private void StartNewLevel()
     {
-        cleanMessage();
+        CleanMessage();
         if (nameID <= 0)
         {
             SetMessageAndType("Must select a level number higher than 0", answerMessageType.Error);
@@ -160,9 +154,7 @@ public class LevelMaker : EditorWindow
         currentLevel = CreateInstance<LevelDesign>();
         currentJunctions = new List<Junction>();
 
-        currentCoinsPosition = new bool[15];
-        currentBlockWinPosition = new int[15];
-        currentBlockLosePosition = new int[5];
+        ResetArrays();
 
         GameObject.Find("LevelLoader").GetComponent<LevelLoader>().setStartValues();
 
@@ -178,7 +170,7 @@ public class LevelMaker : EditorWindow
 
     private void AddJunction()
     {
-        cleanMessage();
+        CleanMessage();
         if (SceneManager.GetActiveScene().name != "LevelMaker")
             SetMessageAndType("Must be in scene 'LevelMaker', please open", answerMessageType.Error);
 
@@ -187,7 +179,6 @@ public class LevelMaker : EditorWindow
 
         if (!string.IsNullOrEmpty(answerMessage))
             return;
-
 
         Junction currentJunction = new Junction();
         JunctionType type = (JunctionType)Enum.Parse(typeof(JunctionType), System.Enum.GetNames(typeof(JunctionType))[currentJuntionTypeID]);
@@ -198,15 +189,37 @@ public class LevelMaker : EditorWindow
 
         GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, Resources.Load<Material>("Materials/Mat_Box_0"));
 
-        currentCoinsPosition = new bool[15];
-        currentBlockWinPosition = new int[15];
-        currentBlockLosePosition = new int[5];
-        Repaint();
+        ResetArrays();
+    }
+
+    private void AddJunctionBlank()
+    {
+        CleanMessage();
+        if (SceneManager.GetActiveScene().name != "LevelMaker")
+            SetMessageAndType("Must be in scene 'LevelMaker', please open", answerMessageType.Error);
+
+        if (currentLevel == null || nameID <= 0 || currentJunctions == null)
+            SetMessageAndType("Must create a level first", answerMessageType.Error);
+
+        if (!string.IsNullOrEmpty(answerMessage))
+            return;
+
+        Junction currentJunction = new Junction();
+        bool[] tempArray = new bool[15];
+
+        for (int i = 0; i < 15; i++)
+            tempArray[i] = false;
+
+        currentJunction.Init(JunctionType.Straight, tempArray, new int[15], new int[5]);
+        currentJunctions.Add(currentJunction);
+
+        GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, Resources.Load<Material>("Materials/Mat_Box_0"));
+        ResetArrays();
     }
 
     private void UndoJunction()
     {
-        cleanMessage();
+        CleanMessage();
         if (SceneManager.GetActiveScene().name != "LevelMaker")
             SetMessageAndType("Must be in scene 'LevelMaker', please open", answerMessageType.Error);
 
@@ -219,8 +232,8 @@ public class LevelMaker : EditorWindow
         if (!string.IsNullOrEmpty(answerMessage))
             return;
 
-        currentJunctions.RemoveAt(currentJunctions.Count - 1);
         GameObject.Find("LevelLoader").GetComponent<LevelLoader>().UndoJunction(currentJunctions[currentJunctions.Count-1].JuntionType);
+        currentJunctions.RemoveAt(currentJunctions.Count - 1);
     }
 
     /// <summary>
@@ -250,11 +263,13 @@ public class LevelMaker : EditorWindow
         SetMessageAndType("Level created with sucess", answerMessageType.Ok);
     }
 
+    /// <summary>
+    /// Delete all Junctions added
+    /// </summary>
     private void EraseLevel()
     {
         GameObject.Find("LevelLoader").GetComponent<LevelLoader>().DestroyCurrentLevel();
     }
-
 
     /// <summary>
     /// Set message
@@ -271,9 +286,30 @@ public class LevelMaker : EditorWindow
     /// <summary>
     /// Clean the messge
     /// </summary>
-    private void cleanMessage()
+    private void CleanMessage()
     {
         currentAnswerType = answerMessageType.Empety;
         answerMessage = "";
     }
+    
+    private void ResetArrays()
+    {
+        currentCoinsPosition = new bool[15];
+        currentBlockWinPosition = new int[15];
+        currentBlockLosePosition = new int[5];
+
+        for (int i = 0; i < 15; i++)
+        {
+            currentCoinsPosition[i] = false;
+            currentBlockWinPosition[i] = 0;
+            if (i < 5)
+                currentBlockLosePosition[i] = 0;
+        }
+
+        coins = so.FindProperty("currentCoinsPosition");
+        boxes = so.FindProperty("currentBlockWinPosition");
+        boxesLose = so.FindProperty("currentBlockLosePosition");
+        Repaint();
+    }
+    #endregion custom methods
 }

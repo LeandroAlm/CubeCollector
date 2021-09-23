@@ -22,25 +22,21 @@ namespace Game.Controller.Menu
     {
         #region variables
         [SerializeField]
-        [Tooltip("Reference of Menu object")]
+        [Tooltip("Menu UI object reference")]
         public GameObject menuUIObject;
         [SerializeField]
-        [Tooltip("Reference of Menu object")]
+        [Tooltip("3d Camera reference")]
         public Camera gameCamera;
         [SerializeField]
-        [Tooltip("Reference of coin text gameobject")]
+        [Tooltip("Coin text object reference")]
         public GameObject[] textCoin;
         [SerializeField]
-        [Tooltip("Reference of levels container gameobject")]
+        [Tooltip("Levels container object reference")]
         private GameObject levelContainerGO;
         [SerializeField]
-        [Tooltip("Reference of shop container gameobject")]
+        [Tooltip("Shop container object reference")]
         public GameObject shopContainerGO;
         [SerializeField]
-        [Tooltip("Reference of settings panel")]
-        private GameObject settingsPanel;
-        [SerializeField]
-        [Range(1, 1000)]
         [Tooltip("Cost of new materials")]
         public int shopCost;
         #endregion variables
@@ -65,20 +61,11 @@ namespace Game.Controller.Menu
         {
             gameCamera.gameObject.SetActive(false);
             SettingsInit();
-            SettingPanelInit();
             LevelsInit();
             ShopLoad();
             foreach (GameObject cointText in textCoin)
             {
                 cointText.GetComponent<TextMeshProUGUI>().text = settingsController.Coins.ToString();
-            }
-
-            for (int i = 0; i < menuUIObject.transform.childCount; i++)
-            {
-                if (i <= 1)
-                    menuUIObject.transform.GetChild(i).gameObject.SetActive(true);
-                else
-                    menuUIObject.transform.GetChild(i).gameObject.SetActive(false);
             }
         }
         #endregion base methods
@@ -90,27 +77,6 @@ namespace Game.Controller.Menu
             settingsController = new SettingsController();
             settingsController.InitSettings();
         }
-
-        private void SettingPanelInit()
-        {
-            Sprite soundOn = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
-            Sprite soundOff = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
-
-            if (settingsController.soundTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOn;
-            else
-                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOff;
-
-            if (settingsController.musicTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOn;
-            else
-                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOff;
-
-            if (settingsController.vibrationTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOn", typeof(Sprite)) as Sprite;
-            else
-                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOff", typeof(Sprite)) as Sprite;
-        }
         #endregion SETTINGS
 
         #region LEVELS
@@ -119,8 +85,6 @@ namespace Game.Controller.Menu
         /// </summary>
         public void LevelsInit()
         {
-            int x = 1;
-            int current_Y = -100;
             var allLevels = Resources.LoadAll("Levels/", typeof(LevelDesign));
 
             GameObject LevelBtt = Resources.Load<GameObject>("Prefabs/UI/LevelBtt");
@@ -129,6 +93,9 @@ namespace Game.Controller.Menu
             if (levelContainerGO.transform.childCount > 0)
                 foreach (Transform child in levelContainerGO.transform)
                     Destroy(child.gameObject);
+
+            if (allLevels.Length > 12)
+                levelContainerGO.transform.parent.GetComponent<ScrollRect>().enabled = true;
 
             for (int i = 1; i < allLevels.Length+1; i++)
             {
@@ -139,20 +106,12 @@ namespace Game.Controller.Menu
                 else
                     levelBtt = Instantiate(LevelBttBlock, levelContainerGO.transform) as GameObject;
 
-                levelBtt.GetComponent<RectTransform>().anchoredPosition = new Vector2(125 + 210 * (x - 1), current_Y);
                 levelBtt.name = "Btt_" + (i < 10 ? "0" : "") + i;
                 levelBtt.transform.GetComponentInChildren<TextMeshProUGUI>().text = (i < 10 ? "0" : "") + i;
 
                 // Need to create an int to fix i value, solved in stackOverflow
                 int i_value = i;
                 levelBtt.GetComponent<Button>()?.onClick.AddListener(delegate { GetComponent<UI.UIController>().OnLoadLevelClick(i_value); });
-
-                x++;
-                if (x >= 4)
-                {
-                    x = 1;
-                    current_Y -= 210;
-                }
             }
         }
         #endregion LEVELS
@@ -163,52 +122,47 @@ namespace Game.Controller.Menu
         /// </summary>
         public void ShopLoad()
         {
-            int x = 1;
-            int current_Y = -100;
-
             string current_shop = settingsController.currentShop;
             string[] allIDNames = current_shop.Split(';');
             List<int> allIDs = new List<int>();
             GameObject shopBtt = Resources.Load<GameObject>("Prefabs/UI/ShopBtt");
             var allTextures = Resources.LoadAll("UI/Box", typeof(Sprite));
+            Color color = new Color(0.4f, 0.4f, 0.4f);
 
             for (int i = 0; i < allIDNames.Length; i++)
                 if (!string.IsNullOrEmpty(allIDNames[i]))
                     allIDs.Add(int.Parse(allIDNames[i]));
 
+            // Enable Scrollbar
+            if (allTextures.Length > 9)
+                shopContainerGO.transform.parent.GetComponent<ScrollRect>().enabled = true;
+
             RectTransform tempGO = null;
             for (int i = 0; i < allTextures.Length; i++)
             {
                 tempGO = Instantiate(shopBtt, shopContainerGO.transform).GetComponent<RectTransform>();
-                tempGO.anchoredPosition = new Vector2(162 + 238 * (x - 1), current_Y);
-                tempGO.GetComponent<Image>().sprite = (Sprite)allTextures[i];
+                //tempGO.anchoredPosition = new Vector2(162 + 238 * (x - 1), current_Y);
+                tempGO.transform.GetChild(1).GetComponent<Image>().sprite = (Sprite)allTextures[i];
                 tempGO.name = i.ToString();
 
                 // Need to create an int to fix i value, solved in stackOverflow
                 GameObject spcialGO = tempGO.gameObject;
                 if (!allIDs.Contains(i))
                 {
-                    tempGO.transform.GetChild(0).gameObject.SetActive(true);
-                    tempGO.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = shopCost.ToString();
+                    tempGO.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+                    tempGO.transform.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text = shopCost.ToString();
 
 
-                    tempGO.GetComponent<Image>().color = Color.grey;
+                    tempGO.transform.GetChild(1).GetComponent<Image>().color = color;
 
                     int i_value = i;
-                    tempGO.GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemBuyClick(spcialGO); });
+                    tempGO.transform.GetChild(1).GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemBuyClick(spcialGO); });
                 }
                 else
-                    tempGO.GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemChangeClick(spcialGO); });
+                    tempGO.transform.GetChild(1).GetComponent<Button>()?.onClick.AddListener(() => { GetComponent<UI.UIController>().OnShopItemChangeClick(spcialGO); });
 
                 if (settingsController.currentBoxID == i)
-                    shopContainerGO.transform.Find("Glow").GetComponent<RectTransform>().anchoredPosition = tempGO.anchoredPosition;
-
-                x++;
-                if (x >= 4)
-                {
-                    x = 1;
-                    current_Y -= 225;
-                }
+                    tempGO.transform.GetChild(0).gameObject.SetActive(true);
             }
         }
         #endregion SHOP

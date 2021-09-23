@@ -47,13 +47,6 @@ ScriptsOnlyBuild:
     - TMPro.TMP_SpriteAsset
     - TMPro.TMP_StyleSheet
     - TMPro.TextMeshProUGUI
-    UnityEditor.Graphs.dll:
-    - UnityEditor.Graphs.AnimationBlendTree.Graph
-    - UnityEditor.Graphs.AnimationBlendTree.GraphGUI
-    - UnityEditor.Graphs.AnimationStateMachine.AnyStateNode
-    - UnityEditor.Graphs.AnimationStateMachine.Graph
-    - UnityEditor.Graphs.AnimationStateMachine.GraphGUI
-    - UnityEditor.Graphs.AnimationStateMachine.StateNode
     UnityEditor.TestRunner.dll:
     - UnityEditor.TestTools.TestRunner.Api.CallbacksHolder
     - UnityEditor.TestTools.TestRunner.TestListCacheData
@@ -63,8 +56,12 @@ ScriptsOnlyBuild:
     - UnityEngine.EventSystems.StandaloneInputModule
     - UnityEngine.UI.Button
     - UnityEngine.UI.CanvasScaler
+    - UnityEngine.UI.ContentSizeFitter
     - UnityEngine.UI.GraphicRaycaster
+    - UnityEngine.UI.GridLayoutGroup
     - UnityEngine.UI.Image
+    - UnityEngine.UI.Mask
+    - UnityEngine.UI.ScrollRect
   sceneClasses:
     Assets/Game/Scenes/Game.unity:
     - Class: 1
@@ -144,25 +141,33 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 3348}
     - Class: 114
+      Script: {instanceID: 3546}
+    - Class: 114
       Script: {instanceID: 3858}
     - Class: 114
-      Script: {instanceID: 4422}
+      Script: {instanceID: 4012}
     - Class: 114
-      Script: {instanceID: 4558}
+      Script: {instanceID: 4276}
     - Class: 114
-      Script: {instanceID: 4820}
+      Script: {instanceID: 4424}
     - Class: 114
-      Script: {instanceID: 4874}
+      Script: {instanceID: 4466}
     - Class: 114
-      Script: {instanceID: 4918}
+      Script: {instanceID: 4560}
     - Class: 114
-      Script: {instanceID: 5192}
+      Script: {instanceID: 4822}
     - Class: 114
-      Script: {instanceID: 5306}
+      Script: {instanceID: 4876}
     - Class: 114
-      Script: {instanceID: 5358}
+      Script: {instanceID: 4920}
     - Class: 114
-      Script: {instanceID: 39450}
+      Script: {instanceID: 5194}
+    - Class: 114
+      Script: {instanceID: 5308}
+    - Class: 114
+      Script: {instanceID: 5316}
+    - Class: 114
+      Script: {instanceID: 5360}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -288,7 +293,7 @@ ScriptsOnlyBuild:
     className: TMP_FontAsset
   - hash:
       serializedVersion: 2
-      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
+      Hash: 90b01fecefe87a3482dbd2f4cebf1282
     assemblyName: Assembly-CSharp.dll
     namespaceName: Game.Loader.Level
     className: LevelLoader
@@ -384,7 +389,7 @@ ScriptsOnlyBuild:
     className: CanvasScaler
   - hash:
       serializedVersion: 2
-      Hash: 64214a381149d42b9952bc711751fadc
+      Hash: 52eeb86bc47779e186e9d76d79c9d8ab
     assemblyName: Assembly-CSharp.dll
     namespaceName: Game.Controller.Menu
     className: MenuController
@@ -480,7 +485,7 @@ ScriptsOnlyBuild:
     className: TMP_SpriteAnimator
   - hash:
       serializedVersion: 2
-      Hash: 9ee3580e85310f1adccf524a897a1f34
+      Hash: 1727f85e1335c980dfb160bd799fcffd
     assemblyName: Assembly-CSharp.dll
     namespaceName: Game.Controller.Player
     className: PlayerController
@@ -666,6 +671,12 @@ ScriptsOnlyBuild:
     className: AudioPlayableAsset
   - hash:
       serializedVersion: 2
+      Hash: 9d7b734db7dce5fbeca62a8d66f7da97
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: Game.Controller.Box
+    className: BoxControlller
+  - hash:
+      serializedVersion: 2
       Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
     assemblyName: UnityEngine.TestRunner.dll
     namespaceName: UnityEngine.TestTools.TestRunner.Callbacks
@@ -798,7 +809,7 @@ ScriptsOnlyBuild:
     className: MotionBlur
   - hash:
       serializedVersion: 2
-      Hash: ea4d78a6f9770bf0f2ab7ae8b7976dd3
+      Hash: afa5d0fdd458785a8b44c5b7f83b41b8
     assemblyName: Assembly-CSharp.dll
     namespaceName: Game.Controller.Game
     className: GameController
@@ -816,7 +827,7 @@ ScriptsOnlyBuild:
     className: TMP_SpriteAsset
   - hash:
       serializedVersion: 2
-      Hash: acd8cfcf243c6be8c61eead08fcd0b91
+      Hash: d794c9d84da408a5256b351a4fd7d2d3
     assemblyName: Assembly-CSharp.dll
     namespaceName: Game.Controller.UI
     className: UIController
@@ -886,12 +897,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.Postprocessing.Runtime.dll
     namespaceName: UnityEngine.Rendering.PostProcessing
     className: AmbientOcclusion
-  - hash:
-      serializedVersion: 2
-      Hash: 9d7b734db7dce5fbeca62a8d66f7da97
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: Game.Controller.Box
-    className: BoxControlller
   platform: 13
   scenePathNames:
   - Assets/Game/Scenes/Game.unity

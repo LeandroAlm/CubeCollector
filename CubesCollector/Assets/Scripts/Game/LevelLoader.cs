@@ -16,13 +16,19 @@ namespace Game.Loader.Level
 {
     public class LevelLoader : MonoBehaviour
     {
-        private Vector3 currentPosition;
-        private Vector3 currentFoward;
-        private int plataformsLoad;
+        #region vars
+        public Vector3 currentPosition;
+        public Vector3 currentForward;
+        public int plataformsLoad;
+        #endregion vars
 
+        #region methods
+        /// <summary>
+        /// Set start values to load 1st Juntion
+        /// </summary>
         public void setStartValues()
         {
-            currentFoward = Vector3.forward;
+            currentForward = Vector3.forward;
             currentPosition = Vector3.zero;
             plataformsLoad = 0;
         }
@@ -32,7 +38,7 @@ namespace Game.Loader.Level
         /// </summary>
         /// <param name="a_level">level to load</param>
         /// <param name="a_BoxMaterial">material to use in win boxes</param>
-        public void loadLevel(int a_level, Material a_BoxMaterial)
+        public void LoadLevel(int a_level, Material a_BoxMaterial)
         {
             setStartValues();
 
@@ -46,12 +52,18 @@ namespace Game.Loader.Level
             }
 
             GameObject go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Finish"));
-            go.transform.position = currentPosition + currentFoward * 4.5f;
-            go.transform.forward = currentFoward;
+            go.transform.position = currentPosition + currentForward * 4.5f;
+            go.transform.forward = currentForward;
             go.name = "Finish";
             go.transform.parent = mapParent;
         }
 
+        /// <summary>
+        /// Load Junction
+        /// </summary>
+        /// <param name="a_junction">junction top load</param>
+        /// <param name="a_mapParent">Map transform reference</param>
+        /// <param name="a_BoxMaterial">Material to add to boxes (in case junction have boxes)</param>
         public void LoadAJunction(Junction a_junction, Transform a_mapParent, Material a_BoxMaterial)
         {
             GameObject go = null;
@@ -61,16 +73,16 @@ namespace Game.Loader.Level
             else if (a_junction.JuntionType == LevelDesign.JunctionType.Left)
             {
                 go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Left"));
-                currentPosition += currentFoward * 2.25f;
+                currentPosition += currentForward * 2.25f;
             }
             else if (a_junction.JuntionType == LevelDesign.JunctionType.Right)
             {
                 go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Right"));
-                currentPosition += currentFoward * 2.25f;
+                currentPosition += currentForward * 2.25f;
             }
 
             go.transform.position = currentPosition;
-            go.transform.forward = currentFoward;
+            go.transform.forward = currentForward;
             go.name = "Junction_" + plataformsLoad;
 
             int x = -2;
@@ -78,37 +90,37 @@ namespace Game.Loader.Level
             GameObject tempGO = null;
             for (int i = 0; i < 15; i++)
             {
-                if (a_junction.BlockWinPosition != null && a_junction.BlockWinPosition.Length > 0 && a_junction.BlockWinPosition[i] > 0)
+                if (a_junction.BlockWinPosition != null && a_junction.BlockWinPosition.Length > 0 && a_junction.BlockWinPosition[i] > 0) // Boxes to pickup
                 {
                     for (int j = 0; j < a_junction.BlockWinPosition[i]; j++)
                     {
                         tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Box"));
-
-                        SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
-                        //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j * 1, go.transform.position.z + z);
                         tempGO.name = "Box_" + i;
+                        tempGO.transform.forward = currentForward;
+                        SetPositionByCurrentForward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
                         tempGO.transform.parent = a_mapParent;
                         tempGO.GetComponent<Renderer>().material = a_BoxMaterial;
                     }
                 }
                 else if ((i >= 5 && i <= 9)
-                    && a_junction.BlockLosePosition != null && a_junction.BlockLosePosition.Length > 0 && a_junction.BlockLosePosition[i - 5] > 0)
+                    && a_junction.BlockLosePosition != null && a_junction.BlockLosePosition.Length > 0 && a_junction.BlockLosePosition[i - 5] > 0) // Boxes to lose
                 {
                     for (int j = 0; j < a_junction.BlockLosePosition[i - 5]; j++)
                     {
                         tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/BoxLose"));
-                        SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
-                        //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j * 1, go.transform.position.z + z);
                         tempGO.name = "BoxLose_" + i;
+                        tempGO.transform.forward = currentForward;
+                        SetPositionByCurrentForward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
                         tempGO.transform.parent = a_mapParent;
                     }
                 }
-                else if (a_junction.CoinsPosition != null && a_junction.CoinsPosition.Length > 0 && a_junction.CoinsPosition[i])
+                else if (a_junction.CoinsPosition != null && a_junction.CoinsPosition.Length > 0 && a_junction.CoinsPosition[i]) // Coins
                 {
                     tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Coin"));
-                    SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.8f);
-                    //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.8f, go.transform.position.z + z);
                     tempGO.name = "Coin_" + i;
+                    tempGO.transform.forward = currentForward;
+                    tempGO.transform.rotation = Quaternion.Euler(new Vector3(-90, 0, 0));
+                    SetPositionByCurrentForward(go.transform, tempGO.transform, x, z, 0.8f);
                     tempGO.transform.parent = a_mapParent;
                 }
 
@@ -122,21 +134,21 @@ namespace Game.Loader.Level
 
             go.transform.parent = a_mapParent;
 
-            // rotate foward for new position and add offset off curves
+            // rotate forward to new direction and add curves offset
             if (a_junction.JuntionType == LevelDesign.JunctionType.Left)
             {
-                currentPosition += currentFoward * 1.25f;
-                currentFoward = -(new Vector3(currentFoward.z, 0, -currentFoward.x));
-                currentPosition += currentFoward * 3.5f;
+                currentPosition += currentForward * 1.25f;
+                currentForward = -(new Vector3(currentForward.z, 0, -currentForward.x));
+                currentPosition += currentForward * 3.5f;
             }
             else if (a_junction.JuntionType == LevelDesign.JunctionType.Right)
             {
-                currentPosition += currentFoward * 1.25f;
-                currentFoward = new Vector3(currentFoward.z, 0, -currentFoward.x);
-                currentPosition += currentFoward * 3.5f;
+                currentPosition += currentForward * 1.25f;
+                currentForward = new Vector3(currentForward.z, 0, -currentForward.x);
+                currentPosition += currentForward * 3.5f;
             }
 
-            currentPosition += currentFoward * 3;
+            currentPosition += currentForward * 3;
             plataformsLoad++;
         }
 
@@ -146,15 +158,15 @@ namespace Game.Loader.Level
         /// <param name="a_reference">Junction to be reference of positions</param>
         /// <param name="a_transform">Transform that will be set position</param>
         /// <param name="a_right">postion gap to right</param>
-        /// <param name="a_foward">postion gap to foward</param>
-        private void SetPositionByCurrentFoward(Transform a_reference, Transform a_transform, int a_right, int a_foward, float height)
+        /// <param name="a_forward">postion gap to forward</param>
+        private void SetPositionByCurrentForward(Transform a_reference, Transform a_transform, int a_right, int a_forward, float height)
         {
-            if (currentFoward.z > 0)
-                a_transform.position = new Vector3(a_reference.position.x + a_right, height, a_reference.position.z + a_foward);
-            else if (currentFoward.x < 0)
-                a_transform.position = new Vector3(a_reference.position.x - a_foward, height, a_reference.position.z + a_right);
-            else if (currentFoward.x > 0)
-                a_transform.position = new Vector3(a_reference.position.x + a_foward, height, a_reference.position.z - a_right);
+            if (currentForward.z > 0)
+                a_transform.position = new Vector3(a_reference.position.x + a_right, height, a_reference.position.z + a_forward);
+            else if (currentForward.x < 0)
+                a_transform.position = new Vector3(a_reference.position.x - a_forward, height, a_reference.position.z + a_right);
+            else if (currentForward.x > 0)
+                a_transform.position = new Vector3(a_reference.position.x + a_forward, height, a_reference.position.z - a_right);
             else
             {
                 if (Application.isEditor)
@@ -164,6 +176,9 @@ namespace Game.Loader.Level
             }
         }
 
+        /// <summary>
+        /// Destroy all level Generated, JUST LEVEL MAKER
+        /// </summary>
         public void DestroyCurrentLevel()
         {
             var tempList = GameObject.Find("Map").transform.Cast<Transform>().ToList();
@@ -174,20 +189,28 @@ namespace Game.Loader.Level
             }
         }
     
+        /// <summary>
+        /// Remove last Junction, JUST LEVEL MAKER
+        /// </summary>
+        /// <param name="a_junctionType"></param>
         public void UndoJunction(LevelDesign.JunctionType a_junctionType)
         {
-            // rotate foward for new position and add offset off curves
+            currentPosition -= currentForward * 3;
+
+            // rotate forward for new position and add offset off curves
             if (a_junctionType == LevelDesign.JunctionType.Left)
             {
-                currentPosition -= currentFoward * 1.25f;
-                currentFoward = (new Vector3(currentFoward.z, 0, -currentFoward.x));
-                currentPosition -= currentFoward * 3.5f;
+                currentPosition -= currentForward * 3.5f;
+                currentForward = (new Vector3(currentForward.z, 0, -currentForward.x));
+                currentPosition -= currentForward * 1.25f;
+                currentPosition -= currentForward * 2.25f;
             }
             else if (a_junctionType == LevelDesign.JunctionType.Right)
             {
-                currentPosition -= currentFoward * 1.25f;
-                currentFoward = -(new Vector3(currentFoward.z, 0, -currentFoward.x));
-                currentPosition -= currentFoward * 3.5f;
+                currentPosition -= currentForward * 3.5f;
+                currentForward = -(new Vector3(currentForward.z, 0, -currentForward.x));
+                currentPosition -= currentForward * 1.25f;
+                currentPosition -= currentForward * 2.25f;
             }
 
             Transform map = GameObject.Find("Map").transform;
@@ -199,9 +222,8 @@ namespace Game.Loader.Level
                 DestroyImmediate(map.GetChild(map.childCount - 1).gameObject);
             }
 
-            currentPosition -= currentFoward * 3;
             plataformsLoad--;
         }
+        #endregion methods
     }
-
 }
