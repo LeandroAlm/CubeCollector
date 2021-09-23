@@ -12,7 +12,7 @@ namespace Game.Design.Juntion
 {
     //[CreateAssetMenu(fileName = "LevelDesign", menuName = "ScriptableObjects/Junction")]
     [System.Serializable]
-    public class Junction// : ScriptableObject
+    public class Junction
     {
         public JunctionType JuntionType;
         public bool[] CoinsPosition;

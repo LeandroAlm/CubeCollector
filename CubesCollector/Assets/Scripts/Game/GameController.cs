@@ -21,59 +21,101 @@ namespace Game.Controller.Game
         #region vars
         [SerializeField]
         [Tooltip("Player gameobject reference")]
-        private GameObject Player;
+        public GameObject player;
+        [SerializeField]
+        [Tooltip("Settings button reference")]
+        private GameObject settingsBtt;
         [SerializeField]
         [Tooltip("Settings Panel reference")]
-        private GameObject SettingsPanel;
+        public GameObject settingsPanel;
+        [SerializeField]
+        [Tooltip("Win Panel reference")]
+        private GameObject winPanel;
+        [SerializeField]
+        [Tooltip("Lose Panel reference")]
+        private GameObject losePanel;
+        [SerializeField]
+        [Tooltip("Play button reference")]
+        private GameObject playBtt;
         #endregion vars
 
         #region internal vars
         private LevelDesign currentLevelDesign;
         #endregion internal vars
 
-        #region base method
-        private void Awake()
+        #region custom methods
+        public void InitLevel()
         {
-            LevelLoader levelLoader = gameObject.AddComponent<LevelLoader>();
-            currentLevelDesign = levelLoader.loadLevel(Menu.MenuController.currentLevel > 0 ? Menu.MenuController.currentLevel : 2);
+            // Clear map
+            Transform map = GameObject.Find("Map").transform;
+            for (int i = 3; i < map.childCount; i++)
+            {
+                Destroy(map.GetChild(i).gameObject);
+            }
 
+            // UI start layout
+            playBtt.SetActive(true);
+            losePanel.SetActive(false);
+            winPanel.SetActive(false);
+            settingsBtt.SetActive(false);
+            settingsPanel.SetActive(false);
+
+            //Menu.MenuController.settingsController.currentLevel = 2; // Force Level in Game Scene
+            Material playersMat = Resources.Load<Material>("Materials/Mat_Box_" + Menu.MenuController.settingsController.currentBoxID);
+            LevelLoader levelLoader = gameObject.AddComponent<LevelLoader>();
+            levelLoader.loadLevel(Menu.MenuController.settingsController.currentLevel, playersMat);
             Destroy(levelLoader);
 
-        }
-        #endregion base method
 
-        #region custom methods
-        public void OnStartClick()
-        {
-            Player.GetComponent<PlayerController>().playerMove();
-        }
-
-        public void OnSettingsClick()
-        {
-            if (!SettingsPanel.activeSelf)
+            if (Menu.MenuController.settingsController.musicTrigger == (int)Settings.SettingsController.settingsTrigger.On)
             {
-                SettingsPanel.SetActive(true);
-                Player.GetComponent<PlayerController>().playerPause();
+                AudioSource audio = GetComponent<AudioSource>();
+                audio.clip = Resources.Load<AudioClip>("Audio/musicGame") as AudioClip;
+                audio.volume = 0.025f;
+                audio.loop = true;
+                audio.Play();
             }
-            else
-            {
-                SettingsPanel.SetActive(false);
-                Player.GetComponent<PlayerController>().playerMove();
-            }
-        }
-    
-        public void OnMenuClick()
-        {
-            // Back to Menu
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu", UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+            player.GetComponent<PlayerController>().PlayerInit(playersMat);
+            // Skybox change color
+            //skyboxMaterial.SetColor("_TintColor", Color.red);
+            //RenderSettings.skybox = skyboxMaterial;
         }
 
-        public void OnExitClick()
+        /// <summary>
+        /// Open Win panel
+        /// </summary>
+        public void FinishLevel()
         {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
-            Application.Quit();
+            var allLevels = Resources.LoadAll("Levels/", typeof(LevelDesign));
+
+            if (Menu.MenuController.settingsController.maxLevel + 1 <= allLevels.Length)
+            {
+                if (Menu.MenuController.settingsController.maxLevel <= Menu.MenuController.settingsController.currentLevel)
+                    Menu.MenuController.settingsController.maxLevel++;
+            }
+            else if(Menu.MenuController.settingsController.currentLevel == allLevels.Length)
+            {
+                winPanel.transform.Find("Next").gameObject.SetActive(false);
+                winPanel.transform.Find("Warning").gameObject.SetActive(true);
+            }
+
+            settingsBtt.SetActive(false);
+            winPanel.SetActive(true);
+        }
+
+        /// <summary>
+        /// Open Lose panel
+        /// </summary>
+        public void LoseLevel()
+        {
+            losePanel.SetActive(true);
+            settingsBtt.SetActive(false);
+        }
+        
+        public void DisableSettingsButton()
+        {
+            settingsBtt.SetActive(false);
         }
         #endregion custom methods
     }

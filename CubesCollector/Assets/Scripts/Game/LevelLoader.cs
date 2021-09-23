@@ -3,11 +3,12 @@
 // Author: Leandro Almeida
 // Date: 17/09/2021
 
-
 #region usings
 using Game.Design.Juntion;
 using Game.Design.Level;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 #endregion usings
 
@@ -15,76 +16,192 @@ namespace Game.Loader.Level
 {
     public class LevelLoader : MonoBehaviour
     {
-        public LevelDesign loadLevel(int a_level)
+        private Vector3 currentPosition;
+        private Vector3 currentFoward;
+        private int plataformsLoad;
+
+        public void setStartValues()
         {
-            LevelDesign level = (LevelDesign)UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Resources/Levels/"
-                + (a_level < 10 ? "0" : "") + a_level + ".asset", typeof(LevelDesign));
+            currentFoward = Vector3.forward;
+            currentPosition = Vector3.zero;
+            plataformsLoad = 0;
+        }
 
+        /// <summary>
+        /// Parse information on LevelDesign into gamescene
+        /// </summary>
+        /// <param name="a_level">level to load</param>
+        /// <param name="a_BoxMaterial">material to use in win boxes</param>
+        public void loadLevel(int a_level, Material a_BoxMaterial)
+        {
+            setStartValues();
 
-            int count = 1;
-            Vector3 currentFoward = Vector3.forward;
-            Vector3 currentPosition = Vector3.zero;
-            GameObject go = null;
+            Transform mapParent = GameObject.Find("Map").transform;
+
+            LevelDesign level = Resources.Load<LevelDesign>("Levels/" + (a_level < 10 ? "0" : "") + a_level) as LevelDesign;
+            
             foreach (Junction junction in level.junctions)
             {
-                go = null;
-
-                if (junction.JuntionType == LevelDesign.JunctionType.Straight)
-                    go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Straight"));
-
-                go.transform.position = currentPosition;
-                go.name = "" + count;
-
-                int x = -2;
-                int z = 1;
-                for (int i = 0; i < 15; i++)
-                {
-                    if (junction.BlockWinPosition != null && junction.BlockWinPosition.Length > 0 && junction.BlockWinPosition[i] > 0)
-                    {
-                        for (int j = 0; j < junction.BlockWinPosition[i]; j++)
-                        {
-                            GameObject tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Box"));
-                            tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j*1, go.transform.position.z + z);
-                            tempGO.name = "Box_" + i;
-                            tempGO.transform.parent = GameObject.Find("Boxes").transform;
-                        }
-                    }
-                    else if ((i >= 5 && i <= 9)
-                        && junction.BlockLosePosition != null && junction.BlockLosePosition.Length > 0 && junction.BlockLosePosition[i-5] > 0)
-                    {
-                        for (int j = 0; j < junction.BlockLosePosition[i-5]; j++)
-                        {
-                            GameObject tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/BoxLose"));
-                            tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j*1, go.transform.position.z + z);
-                            tempGO.name = "BoxLose_" + i;
-                            tempGO.transform.parent = GameObject.Find("BoxesLose").transform;
-                        }
-                    }
-                    else if (junction.CoinsPosition != null && junction.CoinsPosition.Length > 0 && junction.CoinsPosition[i])
-                    {
-                        GameObject tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Coin"));
-                        tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f, go.transform.position.z + z);
-                        tempGO.name = "Coin_" + i;
-                        tempGO.transform.parent = GameObject.Find("Coins").transform;
-                    }
-
-                    x++;
-
-                    if ((i + 1) % 5 == 0)
-                        z--;
-                    if (x >= 3)
-                        x = -2;
-                }
-                go.transform.parent = GameObject.Find("Map").transform;
-                count++;
-                currentPosition += currentFoward * 3;
+                LoadAJunction(junction, mapParent, a_BoxMaterial);
             }
 
-            go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Finish"));
-            go.transform.position = currentPosition;
+            GameObject go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Finish"));
+            go.transform.position = currentPosition + currentFoward * 4.5f;
+            go.transform.forward = currentFoward;
             go.name = "Finish";
+            go.transform.parent = mapParent;
+        }
 
-            return level;
+        public void LoadAJunction(Junction a_junction, Transform a_mapParent, Material a_BoxMaterial)
+        {
+            GameObject go = null;
+
+            if (a_junction.JuntionType == LevelDesign.JunctionType.Straight)
+                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Straight"));
+            else if (a_junction.JuntionType == LevelDesign.JunctionType.Left)
+            {
+                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Left"));
+                currentPosition += currentFoward * 2.25f;
+            }
+            else if (a_junction.JuntionType == LevelDesign.JunctionType.Right)
+            {
+                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Right"));
+                currentPosition += currentFoward * 2.25f;
+            }
+
+            go.transform.position = currentPosition;
+            go.transform.forward = currentFoward;
+            go.name = "Junction_" + plataformsLoad;
+
+            int x = -2;
+            int z = 1;
+            GameObject tempGO = null;
+            for (int i = 0; i < 15; i++)
+            {
+                if (a_junction.BlockWinPosition != null && a_junction.BlockWinPosition.Length > 0 && a_junction.BlockWinPosition[i] > 0)
+                {
+                    for (int j = 0; j < a_junction.BlockWinPosition[i]; j++)
+                    {
+                        tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Box"));
+
+                        SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
+                        //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j * 1, go.transform.position.z + z);
+                        tempGO.name = "Box_" + i;
+                        tempGO.transform.parent = a_mapParent;
+                        tempGO.GetComponent<Renderer>().material = a_BoxMaterial;
+                    }
+                }
+                else if ((i >= 5 && i <= 9)
+                    && a_junction.BlockLosePosition != null && a_junction.BlockLosePosition.Length > 0 && a_junction.BlockLosePosition[i - 5] > 0)
+                {
+                    for (int j = 0; j < a_junction.BlockLosePosition[i - 5]; j++)
+                    {
+                        tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/BoxLose"));
+                        SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
+                        //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.6f + j * 1, go.transform.position.z + z);
+                        tempGO.name = "BoxLose_" + i;
+                        tempGO.transform.parent = a_mapParent;
+                    }
+                }
+                else if (a_junction.CoinsPosition != null && a_junction.CoinsPosition.Length > 0 && a_junction.CoinsPosition[i])
+                {
+                    tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Coin"));
+                    SetPositionByCurrentFoward(go.transform, tempGO.transform, x, z, 0.8f);
+                    //tempGO.transform.position = new Vector3(go.transform.position.x + x, 0.8f, go.transform.position.z + z);
+                    tempGO.name = "Coin_" + i;
+                    tempGO.transform.parent = a_mapParent;
+                }
+
+                x++;
+
+                if ((i + 1) % 5 == 0)
+                    z--;
+                if (x >= 3)
+                    x = -2;
+            }
+
+            go.transform.parent = a_mapParent;
+
+            // rotate foward for new position and add offset off curves
+            if (a_junction.JuntionType == LevelDesign.JunctionType.Left)
+            {
+                currentPosition += currentFoward * 1.25f;
+                currentFoward = -(new Vector3(currentFoward.z, 0, -currentFoward.x));
+                currentPosition += currentFoward * 3.5f;
+            }
+            else if (a_junction.JuntionType == LevelDesign.JunctionType.Right)
+            {
+                currentPosition += currentFoward * 1.25f;
+                currentFoward = new Vector3(currentFoward.z, 0, -currentFoward.x);
+                currentPosition += currentFoward * 3.5f;
+            }
+
+            currentPosition += currentFoward * 3;
+            plataformsLoad++;
+        }
+
+        /// <summary>
+        /// Set postion by rotation of current Junction
+        /// </summary>
+        /// <param name="a_reference">Junction to be reference of positions</param>
+        /// <param name="a_transform">Transform that will be set position</param>
+        /// <param name="a_right">postion gap to right</param>
+        /// <param name="a_foward">postion gap to foward</param>
+        private void SetPositionByCurrentFoward(Transform a_reference, Transform a_transform, int a_right, int a_foward, float height)
+        {
+            if (currentFoward.z > 0)
+                a_transform.position = new Vector3(a_reference.position.x + a_right, height, a_reference.position.z + a_foward);
+            else if (currentFoward.x < 0)
+                a_transform.position = new Vector3(a_reference.position.x - a_foward, height, a_reference.position.z + a_right);
+            else if (currentFoward.x > 0)
+                a_transform.position = new Vector3(a_reference.position.x + a_foward, height, a_reference.position.z - a_right);
+            else
+            {
+                if (Application.isEditor)
+                    DestroyImmediate(a_transform.gameObject);
+                else
+                    Destroy(a_transform.gameObject);
+            }
+        }
+
+        public void DestroyCurrentLevel()
+        {
+            var tempList = GameObject.Find("Map").transform.Cast<Transform>().ToList();
+
+            foreach (var child in tempList)
+            {
+                DestroyImmediate(child.gameObject);
+            }
+        }
+    
+        public void UndoJunction(LevelDesign.JunctionType a_junctionType)
+        {
+            // rotate foward for new position and add offset off curves
+            if (a_junctionType == LevelDesign.JunctionType.Left)
+            {
+                currentPosition -= currentFoward * 1.25f;
+                currentFoward = (new Vector3(currentFoward.z, 0, -currentFoward.x));
+                currentPosition -= currentFoward * 3.5f;
+            }
+            else if (a_junctionType == LevelDesign.JunctionType.Right)
+            {
+                currentPosition -= currentFoward * 1.25f;
+                currentFoward = -(new Vector3(currentFoward.z, 0, -currentFoward.x));
+                currentPosition -= currentFoward * 3.5f;
+            }
+
+            Transform map = GameObject.Find("Map").transform;
+
+            DestroyImmediate(map.GetChild(map.childCount - 1).gameObject);
+
+            while (!map.GetChild(map.childCount - 1).name.StartsWith("Junction_"))
+            {
+                DestroyImmediate(map.GetChild(map.childCount - 1).gameObject);
+            }
+
+            currentPosition -= currentFoward * 3;
+            plataformsLoad--;
         }
     }
+
 }

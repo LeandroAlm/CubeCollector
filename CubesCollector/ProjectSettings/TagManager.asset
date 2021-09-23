@@ -8,6 +8,8 @@ TagManager:
   - BoxLose
   - Coin
   - Map
+  - MapRight
+  - MapLeft
   layers:
   - Default
   - TransparentFX
