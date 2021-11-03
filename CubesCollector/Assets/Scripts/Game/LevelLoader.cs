@@ -22,6 +22,61 @@ namespace Game.Loader.Level
         public int plataformsLoad;
         #endregion vars
 
+        #region internal variables
+        /// <summary>
+        /// Straight junction gameObject reference
+        /// </summary>
+        private GameObject map_Straight;
+        /// <summary>
+        /// Left junction gameObject reference
+        /// </summary>
+        private GameObject map_Left;
+        /// <summary>
+        /// Right junction gameObject reference
+        /// </summary>
+        private GameObject map_Right;
+        /// <summary>
+        /// Finish junction gameObject reference
+        /// </summary>
+        private GameObject map_Finish;
+        /// <summary>
+        /// Coin item gameObject reference
+        /// </summary>
+        private GameObject item_Coin;
+        /// <summary>
+        /// Box item gameObject reference
+        /// </summary>
+        private GameObject item_Box;
+        /// <summary>
+        /// BoxLose item gameObject reference
+        /// </summary>
+        private GameObject item_BoxLose;
+        /// <summary>
+        /// All levels (LevelDesign) reference
+        /// </summary>
+        private List<LevelDesign> all_Levels = new List<LevelDesign>();
+        #endregion internal variables
+
+        #region base methods
+        private void Start()
+        {
+            map_Straight = Resources.Load<GameObject>("Prefabs/Game/Straight");
+            map_Left = Resources.Load<GameObject>("Prefabs/Game/Left");
+            map_Right = Resources.Load<GameObject>("Prefabs/Game/Right");
+            map_Finish = Resources.Load<GameObject>("Prefabs/Game/Finish");
+            item_Coin = Resources.Load<GameObject>("Prefabs/Game/Coin");
+            item_Box = Resources.Load<GameObject>("Prefabs/Game/Box");
+            item_BoxLose = Resources.Load<GameObject>("Prefabs/Game/BoxLose");
+
+            var tempArray = Resources.LoadAll("Levels/", typeof(LevelDesign));
+
+            for (int i = 0; i < tempArray.Length; i++)
+            {
+                all_Levels.Add(tempArray[i] as LevelDesign);
+            }
+        }
+        #endregion base method
+
         #region methods
         /// <summary>
         /// Set start values to load 1st Juntion
@@ -44,14 +99,15 @@ namespace Game.Loader.Level
 
             Transform mapParent = GameObject.Find("Map").transform;
 
-            LevelDesign level = Resources.Load<LevelDesign>("Levels/" + (a_level < 10 ? "0" : "") + a_level) as LevelDesign;
-            
+            LevelDesign level = all_Levels[a_level-1];
+
+
             foreach (Junction junction in level.junctions)
             {
                 LoadAJunction(junction, mapParent, a_BoxMaterial);
             }
 
-            GameObject go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Finish"));
+            GameObject go = Instantiate(map_Finish);
             go.transform.position = currentPosition + currentForward * 4.5f;
             go.transform.forward = currentForward;
             go.name = "Finish";
@@ -69,15 +125,15 @@ namespace Game.Loader.Level
             GameObject go = null;
 
             if (a_junction.JuntionType == LevelDesign.JunctionType.Straight)
-                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Straight"));
+                go = Instantiate(map_Straight);
             else if (a_junction.JuntionType == LevelDesign.JunctionType.Left)
             {
-                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Left"));
+                go = Instantiate(map_Left);
                 currentPosition += currentForward * 2.25f;
             }
             else if (a_junction.JuntionType == LevelDesign.JunctionType.Right)
             {
-                go = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Right"));
+                go = Instantiate(map_Right);
                 currentPosition += currentForward * 2.25f;
             }
 
@@ -94,7 +150,7 @@ namespace Game.Loader.Level
                 {
                     for (int j = 0; j < a_junction.BlockWinPosition[i]; j++)
                     {
-                        tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Box"));
+                        tempGO = Instantiate(item_Box);
                         tempGO.name = "Box_" + i;
                         tempGO.transform.forward = currentForward;
                         SetPositionByCurrentForward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
@@ -107,7 +163,7 @@ namespace Game.Loader.Level
                 {
                     for (int j = 0; j < a_junction.BlockLosePosition[i - 5]; j++)
                     {
-                        tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/BoxLose"));
+                        tempGO = Instantiate(item_BoxLose);
                         tempGO.name = "BoxLose_" + i;
                         tempGO.transform.forward = currentForward;
                         SetPositionByCurrentForward(go.transform, tempGO.transform, x, z, 0.6f + j * 1);
@@ -116,7 +172,7 @@ namespace Game.Loader.Level
                 }
                 else if (a_junction.CoinsPosition != null && a_junction.CoinsPosition.Length > 0 && a_junction.CoinsPosition[i]) // Coins
                 {
-                    tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Coin"));
+                    tempGO = Instantiate(item_Coin);
                     tempGO.name = "Coin_" + i;
                     tempGO.transform.forward = currentForward;
                     tempGO.transform.rotation = Quaternion.Euler(new Vector3(-90, 0, 0));

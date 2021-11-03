@@ -8,6 +8,8 @@ using Game.Controller.Game;
 using Game.Controller.Menu;
 using Game.Design.Juntion;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -114,6 +116,11 @@ namespace Game.Controller.Player
         /// reference to child "Guy"
         /// </summary>
         private Transform guyTransform;
+        /// <summary>
+        /// reference to box prefab
+        /// </summary>
+        private GameObject prefabBox;
+        private List<AudioClip> allAudios;
         #endregion internal vars
 
         #region base methods
@@ -121,6 +128,13 @@ namespace Game.Controller.Player
         {
             boxesContainer = transform.GetChild(0);
             guyTransform = transform.GetChild(1);
+
+            prefabBox = Resources.Load<GameObject>("Prefabs/Game/Box");
+
+            allAudios = new List<AudioClip>();
+            allAudios.Add(Resources.Load<AudioClip>("Audio/coin") as AudioClip);
+            allAudios.Add(Resources.Load<AudioClip>("Audio/boxWin") as AudioClip);
+            allAudios.Add(Resources.Load<AudioClip>("Audio/boxLose") as AudioClip);
 
             extraGO.GetComponent<TextMeshProUGUI>().text = "+" + extraCoin;
         }
@@ -322,7 +336,7 @@ namespace Game.Controller.Player
             }
             else if (boxesContainer.childCount <= 0) // In case lose and restart
             {
-                GameObject tempGO = Instantiate(Resources.Load<GameObject>("Prefabs/Game/Box"), boxesContainer);
+                GameObject tempGO = Instantiate(prefabBox, boxesContainer);
                 tempGO.GetComponent<Renderer>().material = a_material;
             }
             else
@@ -374,7 +388,7 @@ namespace Game.Controller.Player
                 return;
 
             AudioSource audio = GetComponent<AudioSource>();
-            audio.clip = Resources.Load<AudioClip>("Audio/" + a_name) as AudioClip;
+            audio.clip = allAudios.Where(T => T.name == a_name).First();
             audio.volume = a_volume;
             audio.Play();
         }

@@ -62,7 +62,7 @@ namespace Game.Controller.Menu
             gameCamera.gameObject.SetActive(false);
             SettingsInit();
             LevelsInit();
-            ShopLoad();
+            ShopInit();
             foreach (GameObject cointText in textCoin)
             {
                 cointText.GetComponent<TextMeshProUGUI>().text = settingsController.Coins.ToString();
@@ -120,7 +120,7 @@ namespace Game.Controller.Menu
         /// <summary>
         /// Loads all material for possible acquisition
         /// </summary>
-        public void ShopLoad()
+        public void ShopInit()
         {
             string current_shop = settingsController.currentShop;
             string[] allIDNames = current_shop.Split(';');

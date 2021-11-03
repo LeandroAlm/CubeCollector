@@ -34,12 +34,29 @@ namespace Game.Controller.Game
         #endregion vars
 
         #region internal vars
-        private LevelDesign currentLevelDesign;
+        /// <summary>
+        /// levels amount in Resources/Levels folder
+        /// </summary>
+        private int levelAmount = 0;
+        /// <summary>
+        /// Game background music reference
+        /// </summary>
+        private AudioClip music_GameBackground;
+        /// <summary>
+        /// Level loader reference
+        /// </summary>
+        private LevelLoader levelLoader;
         #endregion internal vars
 
         #region custom methods
         public void InitLevel()
         {
+            if (levelAmount <= 0)
+                levelAmount = Resources.LoadAll("Levels/", typeof(LevelDesign)).Length;
+
+            if (music_GameBackground == null)
+                music_GameBackground = Resources.Load<AudioClip>("Audio/musicGame") as AudioClip;
+
             // Clear map
             Transform map = GameObject.Find("Map").transform;
             for (int i = 3; i < map.childCount; i++)
@@ -47,15 +64,18 @@ namespace Game.Controller.Game
                 Destroy(map.GetChild(i).gameObject);
             }
 
+            // need load every enter because could change material
             Material playersMat = Resources.Load<Material>("Materials/Mat_Box_" + Menu.MenuController.settingsController.currentBoxID);
-            LevelLoader levelLoader = gameObject.AddComponent<LevelLoader>();
+
+            if (levelLoader == null)
+                levelLoader = gameObject.GetComponent<LevelLoader>();
+
             levelLoader.LoadLevel(Menu.MenuController.settingsController.currentLevel, playersMat);
-            Destroy(levelLoader);
 
             if (Menu.MenuController.settingsController.musicTrigger == (int)Settings.SettingsController.settingsTrigger.On)
             {
                 AudioSource audio = GetComponent<AudioSource>();
-                audio.clip = Resources.Load<AudioClip>("Audio/musicGame") as AudioClip;
+                audio.clip = music_GameBackground;
                 audio.volume = 0.025f;
                 audio.loop = true;
                 audio.Play();
@@ -70,14 +90,12 @@ namespace Game.Controller.Game
         /// </summary>
         public void FinishLevel()
         {
-            var allLevels = Resources.LoadAll("Levels/", typeof(LevelDesign));
-
-            if (Menu.MenuController.settingsController.maxLevel + 1 <= allLevels.Length)
+            if (Menu.MenuController.settingsController.maxLevel + 1 <= levelAmount)
             {
                 if (Menu.MenuController.settingsController.maxLevel <= Menu.MenuController.settingsController.currentLevel)
                     Menu.MenuController.settingsController.maxLevel++;
             }
-            else if(Menu.MenuController.settingsController.currentLevel == allLevels.Length)
+            else if(Menu.MenuController.settingsController.currentLevel == levelAmount)
             {
                 winPanel.transform.Find("Next").gameObject.SetActive(false);
                 winPanel.transform.Find("Warning").gameObject.SetActive(true);

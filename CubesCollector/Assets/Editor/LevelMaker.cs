@@ -39,6 +39,8 @@ public class LevelMaker : EditorWindow
     public int[] currentBlockWinPosition;
     public int[] currentBlockLosePosition;
 
+    Material defaultMat;
+
     SerializedObject so;
 
     SerializedProperty coins;
@@ -151,6 +153,9 @@ public class LevelMaker : EditorWindow
             return;
         }
 
+        if (defaultMat == null)
+            defaultMat = Resources.Load<Material>("Materials/Mat_Box_0");
+
         currentLevel = CreateInstance<LevelDesign>();
         currentJunctions = new List<Junction>();
 
@@ -187,7 +192,7 @@ public class LevelMaker : EditorWindow
 
         SetMessageAndType("Junction add with sucess", answerMessageType.Ok);
 
-        GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, Resources.Load<Material>("Materials/Mat_Box_0"));
+        GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, defaultMat);
 
         ResetArrays();
     }
@@ -213,7 +218,7 @@ public class LevelMaker : EditorWindow
         currentJunction.Init(JunctionType.Straight, tempArray, new int[15], new int[5]);
         currentJunctions.Add(currentJunction);
 
-        GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, Resources.Load<Material>("Materials/Mat_Box_0"));
+        GameObject.Find("LevelLoader").GetComponent<LevelLoader>().LoadAJunction(currentJunction, GameObject.Find("Map").transform, defaultMat);
         ResetArrays();
     }
 

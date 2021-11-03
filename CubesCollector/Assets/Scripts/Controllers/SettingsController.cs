@@ -110,7 +110,7 @@ namespace Game.Controller.Settings
         public void InitSettings()
         {
             // if possible try load
-            // else sety default
+            // else set default
 
             if (PlayerPrefs.GetInt("COIN") > 0)
                 _Coin = PlayerPrefs.GetInt("COIN");

@@ -67,11 +67,41 @@ namespace Game.Controller.UI
         private GameObject player;
         #endregion variables
 
+        #region internal variables
+        /// <summary>
+        /// Sound on sprite reference
+        /// </summary>
+        private Sprite ui_SoundOn;
+        /// <summary>
+        /// Sound off sprite reference
+        /// </summary>
+        private Sprite ui_SoundOff;
+        /// <summary>
+        /// Vibration on sprite reference
+        /// </summary>
+        private Sprite ui_VibraOn;
+        /// <summary>
+        /// Vibration off sprite reference
+        /// </summary>
+        private Sprite ui_VibraOff;
+        /// <summary>
+        /// Menu background AudioClip reference
+        /// </summary>
+        private AudioClip audio_MenuBackground;
+        #endregion internal variables
+
         #region base methods
         private void Awake()
         {
             SettingPanelInit();
             StartBackgroundMusic();
+
+            // Load Sprites
+            ui_SoundOn = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
+            ui_SoundOff = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
+            ui_VibraOn = Resources.Load("UI/vibrationOn", typeof(Sprite)) as Sprite;
+            ui_VibraOff = Resources.Load("UI/vibrationOff", typeof(Sprite)) as Sprite;
+            audio_MenuBackground = Resources.Load<AudioClip>("Audio/musicMenu") as AudioClip;
 
             for (int i = 0; i < menuUIObject.transform.childCount; i++)
             {
@@ -86,6 +116,24 @@ namespace Game.Controller.UI
 
         #region on click buttons
         #region SETTINGS
+        public void OnSettingsOpen()
+        {
+            if (MenuController.settingsController.soundTrigger == (int)SettingsController.settingsTrigger.On)
+                soundGO.GetComponent<Image>().sprite = ui_SoundOn;
+            else
+                soundGO.GetComponent<Image>().sprite = ui_SoundOff;
+
+            if (MenuController.settingsController.musicTrigger == (int)SettingsController.settingsTrigger.On)
+                musicGO.GetComponent<Image>().sprite = ui_SoundOn;
+            else
+                musicGO.GetComponent<Image>().sprite = ui_SoundOff;
+
+            if (MenuController.settingsController.vibrationTrigger == (int)SettingsController.settingsTrigger.On)
+                vibraGO.GetComponent<Image>().sprite = ui_VibraOn;
+            else
+                vibraGO.GetComponent<Image>().sprite = ui_VibraOff;
+        }
+
         /// <summary>
         /// Set sound settings
         /// </summary>
@@ -93,12 +141,12 @@ namespace Game.Controller.UI
         {
             if (MenuController.settingsController.soundTrigger == (int)SettingsController.settingsTrigger.On)
             {
-                soundGO.GetComponent<Image>().sprite = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
+                soundGO.GetComponent<Image>().sprite = ui_SoundOff;
                 MenuController.settingsController.soundTrigger = (int)SettingsController.settingsTrigger.Off;
             }
             else
             {
-                soundGO.GetComponent<Image>().sprite = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
+                soundGO.GetComponent<Image>().sprite = ui_SoundOn;
                 MenuController.settingsController.soundTrigger = (int)SettingsController.settingsTrigger.On;
             }
 
@@ -114,12 +162,12 @@ namespace Game.Controller.UI
                 if (GetComponent<AudioSource>().isPlaying)
                     GetComponent<AudioSource>().Stop();
 
-                musicGO.GetComponent<Image>().sprite = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
+                musicGO.GetComponent<Image>().sprite = ui_SoundOff;
                 MenuController.settingsController.musicTrigger = (int)SettingsController.settingsTrigger.Off;
             }
             else
             {
-                musicGO.GetComponent<Image>().sprite = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
+                musicGO.GetComponent<Image>().sprite = ui_SoundOn;
                 MenuController.settingsController.musicTrigger = (int)SettingsController.settingsTrigger.On;
                 StartBackgroundMusic();
             }
@@ -132,12 +180,12 @@ namespace Game.Controller.UI
         {
             if (MenuController.settingsController.vibrationTrigger == (int)SettingsController.settingsTrigger.On)
             {
-                vibraGO.GetComponent<Image>().sprite = Resources.Load("UI/vibrationOff", typeof(Sprite)) as Sprite;
+                vibraGO.GetComponent<Image>().sprite = ui_VibraOff;
                 MenuController.settingsController.vibrationTrigger = (int)SettingsController.settingsTrigger.Off;
             }
             else
             {
-                vibraGO.GetComponent<Image>().sprite = Resources.Load("UI/vibrationOn", typeof(Sprite)) as Sprite;
+                vibraGO.GetComponent<Image>().sprite = ui_VibraOn;
                 MenuController.settingsController.vibrationTrigger = (int)SettingsController.settingsTrigger.On;
             }
         }
@@ -315,7 +363,7 @@ namespace Game.Controller.UI
             if (MenuController.settingsController.musicTrigger == (int)SettingsController.settingsTrigger.On)
             {
                 AudioSource audio = GetComponent<AudioSource>();
-                audio.clip = Resources.Load<AudioClip>("Audio/musicMenu") as AudioClip;
+                audio.clip = audio_MenuBackground;
                 audio.volume = 0.5f;
                 audio.loop = true;
                 audio.Play();
@@ -335,23 +383,20 @@ namespace Game.Controller.UI
         /// </summary>
         private void SettingPanelInit()
         {
-            Sprite soundOn = Resources.Load("UI/soundOn", typeof(Sprite)) as Sprite;
-            Sprite soundOff = Resources.Load("UI/soundOff", typeof(Sprite)) as Sprite;
-
             if (MenuController.settingsController.soundTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOn;
+                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = ui_SoundOn;
             else
-                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = soundOff;
+                settingsPanel.transform.Find("Sound").GetChild(0).GetComponent<Image>().sprite = ui_SoundOff;
 
             if (MenuController.settingsController.musicTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOn;
+                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = ui_SoundOn;
             else
-                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = soundOff;
+                settingsPanel.transform.Find("Music").GetChild(0).GetComponent<Image>().sprite = ui_SoundOff;
 
             if (MenuController.settingsController.vibrationTrigger == (int)SettingsController.settingsTrigger.On)
-                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOn", typeof(Sprite)) as Sprite;
+                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = ui_VibraOn;
             else
-                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = Resources.Load("UI/vibrationOff", typeof(Sprite)) as Sprite;
+                settingsPanel.transform.Find("Vibration").GetChild(0).GetComponent<Image>().sprite = ui_VibraOff;
         }
 
         public void GameUILayoutInit()
